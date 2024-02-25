@@ -2,6 +2,7 @@
 
 import os, re
 from collections import UserDict
+from datetime import datetime
 
 os.system("cls")
 
@@ -27,14 +28,25 @@ class Phone(Field):
         if match:
             super().__init__(value)
         else:
-            print(f"Invalid number, must be 10 digits")
+            print("Invalid number, must be 10 digits")
             raise Exception("Invalid number")
+
+
+class Birthday(Field):
+    def __init__(self, value):
+        try:
+            # Перевірка коректності дати
+            value = datetime.strptime(value, "%d.%m.%Y")
+            super().__init__(value)
+        except ValueError:
+            raise ValueError("Invalid date format. Use DD.MM.YYYY")
 
 
 class Record:
     def __init__(self, name):
         self.name = Name(name)
         self.phones = []
+        self.birthday = None
 
     # Додавання телефону до контакту
     def add_phone(self, phone: Phone):
@@ -75,9 +87,21 @@ class Record:
         else:
             print(f"Phone {phone.value} not found - find_phone")
 
+    # Додавання дня народження до контакту
+    def add_birthday(self, date: str):
+        try:
+            birthday = Birthday(date)
+            self.birthday = birthday
+            print(f"Birthday {date} added for contact {self.name.value}")
+        except Exception as e:
+            print("Invalid date format. Use DD.MM.YYYY")
+
     # Формат виведення контакту
     def __str__(self):
-        return f"Contact name: {self.name.value}, phones: {'; '.join(p.value for p in self.phones)}"
+        result = f"Contact name: {self.name.value}, phones: {'; '.join(p.value for p in self.phones)}"
+        if self.birthday:
+            result += "; birthday: " + self.birthday.value.strftime("%d.%m.%Y")
+        return result
 
 
 class AddressBook(UserDict):
@@ -115,6 +139,7 @@ def main():
     john_record = Record("John")
     john_record.add_phone("1234567890")
     john_record.add_phone("5555555555")
+    john_record.add_birthday("25.02.2004")
 
     # Додавання запису John до адресної книги
     book.add_record(john_record)
@@ -122,11 +147,13 @@ def main():
     # Створення та додавання нового запису для Jane
     jane_record = Record("Jane")
     jane_record.add_phone("9876543210")
+    jane_record.add_birthday("200220.04")
     book.add_record(jane_record)
 
     # Виведення всіх записів у книзі
     for name, record in book.data.items():
         print(record)
+
 
     # Знаходження та редагування телефону для John
     john = book.find("John")
