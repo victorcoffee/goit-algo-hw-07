@@ -1,8 +1,9 @@
 # Модуль 6
 
-import os, re
+import os, re, datetime
 from collections import UserDict
-from datetime import datetime
+
+# from datetime import datetime
 
 os.system("cls")
 
@@ -36,7 +37,7 @@ class Birthday(Field):
     def __init__(self, value):
         try:
             # Перевірка коректності дати
-            value = datetime.strptime(value, "%d.%m.%Y")
+            value = datetime.datetime.strptime(value, "%d.%m.%Y")
             super().__init__(value)
         except ValueError:
             raise ValueError("Invalid date format. Use DD.MM.YYYY")
@@ -130,6 +131,49 @@ class AddressBook(UserDict):
         else:
             print("Contact {name} is absent")
 
+    # Функція повертає список іменинників на найближчі 7 днів
+    def get_upcoming_birthdays(self):
+        upcoming_birthdays = []
+        today = datetime.datetime.today().date()
+        end_week = today + datetime.timedelta(days=7)
+
+        for key, record in self.data.items():
+            if record.birthday:
+                birthday = record.birthday.value.date()
+                birthday_this_year = datetime.date(
+                    today.year, birthday.month, birthday.day
+                )
+
+                # Якщо день народження вже був у цьому році, визначаємо наступний
+                if birthday_this_year < today:
+                    birthday_next_year = datetime.date(
+                        today.year + 1, birthday.month, birthday.day
+                    )
+                    nearest_birthday = birthday_next_year
+                else:
+                    nearest_birthday = birthday_this_year
+
+                # Перенесення привітання з вихідних  на понеділок
+                if nearest_birthday.weekday() == 5:
+                    congratulation_date = nearest_birthday + datetime.timedelta(days=2)
+                elif nearest_birthday.weekday() == 6:
+                    congratulation_date = nearest_birthday + datetime.timedelta(days=1)
+                else:
+                    congratulation_date = nearest_birthday
+
+                # Якщо день народження у найближчі 7 днів, то додаємо у список
+                if today <= nearest_birthday < end_week:
+                    person_to_congratulate = {
+                        "name": record.name.value,
+                        "congratulation_date": congratulation_date.strftime("%d.%m.%Y"),
+                    }
+                    print(
+                        record.name, birthday, birthday_this_year, congratulation_date
+                    )
+                    upcoming_birthdays.append(person_to_congratulate)
+
+        return upcoming_birthdays
+
 
 def main():
     # Створення нової адресної книги
@@ -139,7 +183,7 @@ def main():
     john_record = Record("John")
     john_record.add_phone("1234567890")
     john_record.add_phone("5555555555")
-    john_record.add_birthday("25.02.2004")
+    john_record.add_birthday("29.02.2004")
 
     # Додавання запису John до адресної книги
     book.add_record(john_record)
@@ -147,12 +191,17 @@ def main():
     # Створення та додавання нового запису для Jane
     jane_record = Record("Jane")
     jane_record.add_phone("9876543210")
-    jane_record.add_birthday("200220.04")
+    jane_record.add_birthday("02.03.2003")
     book.add_record(jane_record)
 
     # Виведення всіх записів у книзі
     for name, record in book.data.items():
         print(record)
+
+    # Список привітань на цьому тижні
+    upcoming_birthdays = book.get_upcoming_birthdays()
+    print("Список привітань на цьому тижні:", upcoming_birthdays)
+
 
 
     # Знаходження та редагування телефону для John
