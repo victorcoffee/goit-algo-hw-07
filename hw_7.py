@@ -3,9 +3,22 @@
 import os, re, datetime
 from collections import UserDict
 
-# from datetime import datetime
-
 os.system("cls")
+
+
+# Декоратор обробляє винятки, що виникають у функціях - handler
+def input_error(func):
+    def inner(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except KeyError:
+            return "Give me name and phone please."
+        except IndexError:
+            return "Enter the argument for the command"
+        except ValueError:
+            return "Enter the argument for the command"
+
+    return inner
 
 
 class Field:
@@ -73,10 +86,9 @@ class Record:
         for index in range(len(self.phones)):
             if old_phone.value == self.phones[index].value:
                 self.phones[index] = new_phone
-                print(f"Number {new_phone.value} updated for {self.name.value}")
-                return
+                return f"Number {new_phone.value} updated for {self.name.value}"
         else:
-            print(f"Phone {old_phone.value} not found - edit_phone")
+            return f"Phone {old_phone.value} not found - edit_phone"
 
     # Пошук телефону у контакта
     def find_phone(self, phone: Phone):
@@ -116,9 +128,9 @@ class AddressBook(UserDict):
     def find(self, name: Name) -> Record:
         for key, value in self.data.items():
             if key.value == name:
-                print(f"Contact {name} found")
+                print(f"Contact {name} found")  # відключити ?
                 return self.data[key]
-        print(f"Contact {name} not found")
+        print(f"Contact {name} not found")  # відключити ?
         return
 
     # Видалення контакту з книги
@@ -174,7 +186,23 @@ class AddressBook(UserDict):
 
         return upcoming_birthdays
 
+    @input_error
+    def add_birthday(args, book):
+        # реалізація
+        pass
 
+    @input_error
+    def show_birthday(args, book):
+        # реалізація
+        pass
+
+    @input_error
+    def birthdays(args, book):
+        # реалізація
+        pass
+
+
+"""
 def main():
     # Створення нової адресної книги
     book = AddressBook()
@@ -229,6 +257,103 @@ def main():
         print(record)
 
     print("The program is completed")
+"""
+
+
+# Парсер команд з 5.4
+@input_error
+def parse_input(user_input):
+    cmd, *args = user_input.split()
+    cmd = cmd.strip().lower()
+    return cmd, *args
+
+
+# Додавання контакту. Зразок із ТЗ
+@input_error
+def add_contact(args, book: AddressBook):
+    name, phone, *_ = args
+    record = book.find(name)
+    message = "Contact updated."
+    if record is None:
+        record = Record(name)
+        book.add_record(record)
+        message = "Contact added."
+    if phone:
+        record.add_phone(phone)
+    return message
+
+
+# Зміна контакту. Адаптація з 5.4
+@input_error
+def change_contact(args, book: AddressBook):
+    name, old_phone, new_phone, *_ = args
+    record = book.find(name)
+
+    if record:
+        message = record.edit_phone(old_phone, new_phone)
+        return message
+    else:
+        return "Contact was not updated"
+
+
+#  Виведення всіх контаків
+@input_error
+def show_all(book: AddressBook):
+    for name, record in book.data.items():
+        message = f"{name}"
+        for phone in record.phones:
+            message += f", {str(phone.value)}"
+        # if record.birtday:
+        #     message += f"{record.birthday}"
+        print(message)
+
+    return "All list of contacts printed."
+
+
+# Зразок із ТЗ
+def main():
+    book = AddressBook()
+    print("Welcome to the assistant bot!")
+    while True:
+        user_input = input("Enter a command: ")
+        command, *args = parse_input(user_input)
+
+        if command in ["close", "exit"]:
+            print("Good bye!")
+            break
+
+        elif command == "hello":
+            print("How can I help you?")
+
+        elif command == "add":
+            print(add_contact(args, book))
+
+        elif command == "change":
+            print(change_contact(args, book))
+
+        elif command == "phone":
+            # реалізація
+            pass
+
+        elif command == "all":
+            # реалізація
+            show_all(book)
+            pass
+
+        elif command == "add-birthday":
+            # реалізація
+            pass
+
+        elif command == "show-birthday":
+            # реалізація
+            pass
+
+        elif command == "birthdays":
+            # реалізація
+            pass
+
+        else:
+            print("Invalid command.")
 
 
 if __name__ == "__main__":
