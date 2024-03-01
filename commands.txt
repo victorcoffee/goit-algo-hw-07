@@ -1,0 +1,14 @@
+add tom 0123456789
+add tom 0951234567
+change tom 0123456789 0671234567
+add sam 0504567890
+add-birthday tom 01.03.1987
+add-birthday sam 03.03.2001
+add-birthday jane 04.10.1961
+all
+birthdays
+show-birthday tom
+show-birthday tommy
+show-birthday sam
+phone tom
+phone tommy

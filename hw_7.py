@@ -6,7 +6,8 @@ from collections import UserDict
 os.system("cls")
 
 
-# Декоратор обробляє винятки, що виникають у функціях - handler
+# Декоратор обробляє винятки, що виникають у функціях
+# Допрацювати!
 def input_error(func):
     def inner(*args, **kwargs):
         try:
@@ -17,6 +18,8 @@ def input_error(func):
             return "Enter the argument for the command"
         except ValueError:
             return "Enter the argument for the command"
+        # except ValueError:
+        #     return "Enter the argument for the command"
 
     return inner
 
@@ -43,7 +46,7 @@ class Phone(Field):
             super().__init__(value)
         else:
             print("Invalid number, must be 10 digits")
-            raise Exception("Invalid number")
+            # raise Exception("Invalid number")
 
 
 class Birthday(Field):
@@ -101,7 +104,7 @@ class Record:
             print(f"Phone {phone.value} not found - find_phone")
 
     # Додавання дня народження до контакту
-    def add_birthday(self, date: str):
+    def _add_birthday(self, date: str):
         try:
             birthday = Birthday(date)
             self.birthday = birthday
@@ -128,12 +131,10 @@ class AddressBook(UserDict):
     def find(self, name: Name) -> Record:
         for key, value in self.data.items():
             if key.value == name:
-                print(f"Contact {name} found")  # відключити ?
                 return self.data[key]
-        print(f"Contact {name} not found")  # відключити ?
         return
 
-    # Видалення контакту з книги
+    # Видалення контакту з книги. В даному релізі не використовується
     def delete(self, name: Name):
         for key, value in self.data.items():
             if key.value == name:
@@ -180,84 +181,59 @@ class AddressBook(UserDict):
                         "congratulation_date": congratulation_date.strftime("%d.%m.%Y"),
                     }
                     print(
-                        record.name, birthday, birthday_this_year, congratulation_date
+                        record.name,
+                        birthday.strftime("%d.%m.%Y"),
+                        birthday_this_year.strftime("%d.%m.%Y"),
+                        congratulation_date.strftime("%d.%m.%Y"),
                     )
                     upcoming_birthdays.append(person_to_congratulate)
 
         return upcoming_birthdays
 
-    @input_error
-    def add_birthday(args, book):
-        # реалізація
-        pass
 
-    @input_error
-    def show_birthday(args, book):
-        # реалізація
-        pass
-
-    @input_error
-    def birthdays(args, book):
-        # реалізація
-        pass
-
-
-"""
-def main():
-    # Створення нової адресної книги
-    book = AddressBook()
-
-    # Створення запису для John
-    john_record = Record("John")
-    john_record.add_phone("1234567890")
-    john_record.add_phone("5555555555")
-    john_record.add_birthday("29.02.2004")
-
-    # Додавання запису John до адресної книги
-    book.add_record(john_record)
-
-    # Створення та додавання нового запису для Jane
-    jane_record = Record("Jane")
-    jane_record.add_phone("9876543210")
-    jane_record.add_birthday("02.03.2003")
-    book.add_record(jane_record)
-
-    # Виведення всіх записів у книзі
-    for name, record in book.data.items():
-        print(record)
-
-    # Список привітань на цьому тижні
-    upcoming_birthdays = book.get_upcoming_birthdays()
-    print("Список привітань на цьому тижні:", upcoming_birthdays)
+@input_error
+def add_birthday(args, book):
+    name, birthday, *_ = args
+    record = book.find(name)
+    message = "Contact updated."
+    if record is None:
+        record = Record(name)
+        book.add_record(record)
+        message = "Contact added."
+    if birthday:
+        record._add_birthday(birthday)
+    return message
 
 
+@input_error
+def show_birthday(args, book):
+    name, *_ = args
+    record = book.find(name)
+    if record is None:
+        message = "Contact not found."
+    elif record.birthday:
+        message = record.name.value + " " + record.birthday.value.strftime("%d.%m.%Y")
+    else:
+        message = f"There is no any information about {record.name.value}'s birthday"
+    print(message)
 
-    # Знаходження та редагування телефону для John
-    john = book.find("John")
-    john.edit_phone("1234567890", "1112223333")
-    print("john:", john)
 
-    # Пошук конкретного телефону у записі John
-    found_phone = john.find_phone("5555555555")
-    print(f"Found phone: {found_phone}")
+@input_error
+def birthdays(args, book):
+    book.get_upcoming_birthdays()
 
-    # Видалення телефону
-    john.remove_phone("5555555555")
-    print(john)
 
-    # Спроба видалення неіснуючого телефону
-    john.remove_phone("5555555555")
-    print(john)
-
-    # Видалення запису Jane
-    book.delete("Jane")
-
-    # Виведення всіх записів у книзі
-    for name, record in book.data.items():
-        print(record)
-
-    print("The program is completed")
-"""
+@input_error
+def phone(args, book):
+    name, *_ = args
+    record = book.find(name)
+    if record is None:
+        message = "Contact not found."
+    elif record.phones:
+        message = f"Contact name: {record.name.value}, phones: {'; '.join(p.value for p in record.phones)}"
+    else:
+        message = f"There is no any information about {record.name.value}'s phone"
+    print(message)
 
 
 # Парсер команд з 5.4
@@ -303,8 +279,9 @@ def show_all(book: AddressBook):
         message = f"{name}"
         for phone in record.phones:
             message += f", {str(phone.value)}"
-        # if record.birtday:
-        #     message += f"{record.birthday}"
+        if record.birthday:
+            bthday = record.birthday.value.strftime("%d.%m.%Y")
+            message += f", {bthday}"
         print(message)
 
     return "All list of contacts printed."
@@ -332,25 +309,19 @@ def main():
             print(change_contact(args, book))
 
         elif command == "phone":
-            # реалізація
-            pass
+            phone(args, book)
 
         elif command == "all":
-            # реалізація
             show_all(book)
-            pass
 
         elif command == "add-birthday":
-            # реалізація
-            pass
+            add_birthday(args, book)
 
         elif command == "show-birthday":
-            # реалізація
-            pass
+            show_birthday(args, book)
 
         elif command == "birthdays":
-            # реалізація
-            pass
+            birthdays(args, book)
 
         else:
             print("Invalid command.")
