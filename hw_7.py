@@ -45,8 +45,8 @@ class Phone(Field):
         if match:
             super().__init__(value)
         else:
-            print("Invalid number, must be 10 digits")
-            # raise Exception("Invalid number")
+            # print("Invalid number, must be 10 digits")
+            raise ValueError("Invalid number")
 
 
 class Birthday(Field):
@@ -67,11 +67,14 @@ class Record:
 
     # Додавання телефону до контакту
     def add_phone(self, phone: Phone):
-        phone = Phone(phone)
-        self.phones.append(phone)
-        print(f"Number {phone} added for {self.name.value}")
+        try:
+            phone = Phone(phone)
+            self.phones.append(phone)
+            print(f"Number {phone} added for {self.name.value}")
+        except ValueError:
+            print("Invalid number, must be 10 digits")
 
-    # Видалення телефону до контакту
+    # Видалення телефону до контакту. В данному релізі не використовується
     def remove_phone(self, phone: Phone):
         phone = Phone(phone)
         for index in range(len(self.phones)):
@@ -108,7 +111,7 @@ class Record:
         try:
             birthday = Birthday(date)
             self.birthday = birthday
-            print(f"Birthday {date} added for contact {self.name.value}")
+            print(f"Birthday {date} added for {self.name.value}")
         except Exception as e:
             print("Invalid date format. Use DD.MM.YYYY")
 
@@ -149,7 +152,8 @@ class AddressBook(UserDict):
         upcoming_birthdays = []
         today = datetime.datetime.today().date()
         end_week = today + datetime.timedelta(days=7)
-
+        print("This week birthdays:")
+        print("Name   Born    Birthday   Congratulate")
         for key, record in self.data.items():
             if record.birthday:
                 birthday = record.birthday.value.date()
@@ -180,12 +184,10 @@ class AddressBook(UserDict):
                         "name": record.name.value,
                         "congratulation_date": congratulation_date.strftime("%d.%m.%Y"),
                     }
-                    print(
-                        record.name,
-                        birthday.strftime("%d.%m.%Y"),
-                        birthday_this_year.strftime("%d.%m.%Y"),
-                        congratulation_date.strftime("%d.%m.%Y"),
-                    )
+                    bthday = birthday.strftime("%d.%m.%Y")
+                    bthdaythis = birthday_this_year.strftime("%d.%m.%Y")
+                    congrat = congratulation_date.strftime("%d.%m.%Y")
+                    print(f"{record.name} {bthday:10} {bthdaythis:10} {congrat:10}")
                     upcoming_birthdays.append(person_to_congratulate)
 
         return upcoming_birthdays
@@ -276,15 +278,14 @@ def change_contact(args, book: AddressBook):
 @input_error
 def show_all(book: AddressBook):
     for name, record in book.data.items():
-        message = f"{name}"
+        message = f"Contact name: {name}, phones:"
         for phone in record.phones:
-            message += f", {str(phone.value)}"
+            message += f" {str(phone.value)}"
         if record.birthday:
-            bthday = record.birthday.value.strftime("%d.%m.%Y")
-            message += f", {bthday}"
+            message += f"; birthday: {record.birthday.value.strftime('%d.%m.%Y')}"
         print(message)
-
-    return "All list of contacts printed."
+    print("All list of contacts printed.")
+    return
 
 
 # Зразок із ТЗ
