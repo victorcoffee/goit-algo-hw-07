@@ -7,7 +7,7 @@ os.system("cls")
 
 
 # Декоратор обробляє винятки, що виникають у функціях
-# Допрацювати!
+# Допрацювати? Перехоплюються лише ValueError.
 def input_error(func):
     def inner(*args, **kwargs):
         try:
@@ -15,11 +15,9 @@ def input_error(func):
         except KeyError:
             return "Give me name and phone please."
         except IndexError:
-            return "Enter the argument for the command"
+            return "Enter the argument for the command IndexError"
         except ValueError:
-            return "Enter the argument for the command"
-        # except ValueError:
-        #     return "Enter the argument for the command"
+            return "Enter the argument for the command ValueError"
 
     return inner
 
@@ -96,16 +94,6 @@ class Record:
         else:
             return f"Phone {old_phone.value} not found - edit_phone"
 
-    # Пошук телефону у контакта
-    def find_phone(self, phone: Phone):
-        phone = Phone(phone)
-        for item in self.phones:
-            if phone.value == item.value:
-                print(f"Phone {phone.value} found")
-                return f"{self.name.value}: {phone.value}"
-        else:
-            print(f"Phone {phone.value} not found - find_phone")
-
     # Додавання дня народження до контакту
     def _add_birthday(self, date: str):
         try:
@@ -153,7 +141,7 @@ class AddressBook(UserDict):
         today = datetime.datetime.today().date()
         end_week = today + datetime.timedelta(days=7)
         print("This week birthdays:")
-        print("Name   Born    Birthday   Congratulate")
+        print("Name        Born       Birthday   Congratulate")
         for key, record in self.data.items():
             if record.birthday:
                 birthday = record.birthday.value.date()
@@ -187,12 +175,15 @@ class AddressBook(UserDict):
                     bthday = birthday.strftime("%d.%m.%Y")
                     bthdaythis = birthday_this_year.strftime("%d.%m.%Y")
                     congrat = congratulation_date.strftime("%d.%m.%Y")
-                    print(f"{record.name} {bthday:10} {bthdaythis:10} {congrat:10}")
+                    print(
+                        f"{record.name.value:8} {bthday:12} {bthdaythis:12} {congrat:12}"
+                    )
                     upcoming_birthdays.append(person_to_congratulate)
 
         return upcoming_birthdays
 
 
+# Додавання дня народження для контакта
 @input_error
 def add_birthday(args, book):
     name, birthday, *_ = args
@@ -207,6 +198,7 @@ def add_birthday(args, book):
     return message
 
 
+# Виведення інформації про день народження контакта
 @input_error
 def show_birthday(args, book):
     name, *_ = args
@@ -214,17 +206,19 @@ def show_birthday(args, book):
     if record is None:
         message = "Contact not found."
     elif record.birthday:
-        message = record.name.value + " " + record.birthday.value.strftime("%d.%m.%Y")
+        message = f"Contact name: {record.name.value}, birthday: {record.birthday.value.strftime('%d.%m.%Y')}"
     else:
         message = f"There is no any information about {record.name.value}'s birthday"
     print(message)
 
 
+# Виведення найближчих днів народження
 @input_error
 def birthdays(args, book):
     book.get_upcoming_birthdays()
 
 
+# Пошук контакта за іменем
 @input_error
 def phone(args, book):
     name, *_ = args
@@ -238,7 +232,7 @@ def phone(args, book):
     print(message)
 
 
-# Парсер команд з 5.4
+# Парсер команд
 @input_error
 def parse_input(user_input):
     cmd, *args = user_input.split()
@@ -261,7 +255,7 @@ def add_contact(args, book: AddressBook):
     return message
 
 
-# Зміна контакту. Адаптація з 5.4
+# Зміна контакту
 @input_error
 def change_contact(args, book: AddressBook):
     name, old_phone, new_phone, *_ = args
@@ -278,17 +272,12 @@ def change_contact(args, book: AddressBook):
 @input_error
 def show_all(book: AddressBook):
     for name, record in book.data.items():
-        message = f"Contact name: {name}, phones:"
-        for phone in record.phones:
-            message += f" {str(phone.value)}"
-        if record.birthday:
-            message += f"; birthday: {record.birthday.value.strftime('%d.%m.%Y')}"
-        print(message)
+        print(record)
     print("All list of contacts printed.")
     return
 
 
-# Зразок із ТЗ
+# Основна програма
 def main():
     book = AddressBook()
     print("Welcome to the assistant bot!")
